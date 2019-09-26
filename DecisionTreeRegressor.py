@@ -18,10 +18,15 @@ class MyDecisionTreeRegressor():
 
         root: type: dictionary, the root node of the regression tree.
         '''
-
         self.max_depth = max_depth
         self.min_samples_split = min_samples_split
         self.root = None
+
+    def _fit_recur(self, X, y, tree_iter, depth):
+        # to find argmin (j,s), try all (j,s) and store result in array of shape (j,s)
+        if depth > self.max_depth:
+            return
+        mse = np.zeros(X.shape)
 
     def fit(self, X, y):
         '''
@@ -31,6 +36,8 @@ class MyDecisionTreeRegressor():
 
         You should update the self.root in this function.
         '''
+        # depth-first fit
+
         pass
 
     def predict(self, X):
@@ -38,7 +45,16 @@ class MyDecisionTreeRegressor():
         :param X: Feature data, type: numpy array, shape: (N, num_feature)
         :return: y_pred: Predicted label, type: numpy array, shape: (N,)
         '''
-        pass
+        y_pred = []
+        for x in X:
+            model_node_iter = self.root
+            while type(model_node_iter) is dict:
+                if x[model_node_iter['splitting_variable']] <= model_node_iter['splitting_threshold']:
+                    model_node_iter = model_node_iter['left']
+                else:
+                    model_node_iter = model_node_iter['right']
+            y_pred.append(model_node_iter)
+        return y_pred
 
     def get_model_dict(self):
         model_dict = self.root
@@ -98,6 +114,11 @@ if __name__ == '__main__':
 
             with open("Test_data" + os.sep + "decision_tree_" + str(i) + "_" + str(j) + ".json", 'r') as fp:
                 test_model_dict = json.load(fp)
+
+            # TODO Debugging
+            # tree.root = test_model_dict
+            # model_dict = tree.get_model_dict()
+            # y_pred = tree.predict(x_train)
 
             y_test_pred = np.genfromtxt(
                 "Test_data" + os.sep + "y_pred_decision_tree_" + str(i) + "_" + str(j) + ".csv", delimiter=",")
