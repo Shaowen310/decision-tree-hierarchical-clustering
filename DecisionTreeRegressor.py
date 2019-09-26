@@ -26,7 +26,28 @@ class MyDecisionTreeRegressor():
         # to find argmin (j,s), try all (j,s) and store result in array of shape (j,s)
         if depth > self.max_depth:
             return
-        mse = np.zeros(X.shape)
+
+        compare_lhs = np.tile(X.T, len(X)).reshape((X.size, -1))
+        compare_rhs = np.repeat(X.T, len(X)).reshape((X.size, -1))
+        tree_left = compare_lhs <= compare_rhs
+        tree_right = compare_lhs > compare_rhs
+        y_tile = np.tile(y, X.size).reshape((X.size, -1))
+        tree_left_count = np.sum(tree_left, axis=1)
+        tree_right_count = np.sum(tree_right, axis=1)
+        tree_left_true_count = np.sum(tree_left * y_tile, axis=1)
+        tree_right_true_count = np.sum(tree_right * y_tile, axis=1)
+        c_hat_left = tree_left_true_count / tree_left_count
+        c_hat_right = tree_right_true_count / tree_right_count
+        mse =  (1 - c_hat_left) ** 2 * tree_left_true_count \
+            + c_hat_left ** 2 * (tree_left_count - tree_left_true_count) \
+            + (1 - c_hat_right) ** 2 * tree_right_true_count \
+            + c_hat_right ** 2 * (tree_right_count - tree_right_true_count)
+        split = np.argmin(mse)
+        j = split / X.shape[1]
+        s = X[j, split % X.shape[1]]
+        
+        for j in range(X.shape[1]):
+            np.tile(X[:,j], len(X)) <= X[:,j]
 
     def fit(self, X, y):
         '''
@@ -37,8 +58,7 @@ class MyDecisionTreeRegressor():
         You should update the self.root in this function.
         '''
         # depth-first fit
-
-        pass
+        self._fit_recur(X, y, self.root, 1)
 
     def predict(self, X):
         '''
