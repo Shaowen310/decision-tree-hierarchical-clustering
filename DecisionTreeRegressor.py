@@ -22,32 +22,42 @@ class MyDecisionTreeRegressor():
         self.min_samples_split = min_samples_split
         self.root = None
 
-    def _fit_recur(self, X, y, tree_iter, depth):
+    def _fit_recur(self, X, y, depth):
         # to find argmin (j,s), try all (j,s) and store result in array of shape (j,s)
-        if depth > self.max_depth:
-            return
 
-        compare_lhs = np.tile(X.T, len(X)).reshape((X.size, -1))
-        compare_rhs = np.repeat(X.T, len(X)).reshape((X.size, -1))
+        if depth >= self.max_depth or len(X) < self.min_samples_split:
+            return np.sum(y) / len(X)
+
+        compare_lhs = np.tile(X.T, len(X)).reshape(
+            (X.shape[1], X.shape[0], -1))
+        compare_rhs = np.reshape(X.T, (X.shape[1], X.shape[0], 1))
         tree_left = compare_lhs <= compare_rhs
         tree_right = compare_lhs > compare_rhs
-        y_tile = np.tile(y, X.size).reshape((X.size, -1))
-        tree_left_count = np.sum(tree_left, axis=1)
-        tree_right_count = np.sum(tree_right, axis=1)
-        tree_left_true_count = np.sum(tree_left * y_tile, axis=1)
-        tree_right_true_count = np.sum(tree_right * y_tile, axis=1)
-        c_hat_left = tree_left_true_count / tree_left_count
-        c_hat_right = tree_right_true_count / tree_right_count
-        mse =  (1 - c_hat_left) ** 2 * tree_left_true_count \
-            + c_hat_left ** 2 * (tree_left_count - tree_left_true_count) \
-            + (1 - c_hat_right) ** 2 * tree_right_true_count \
-            + c_hat_right ** 2 * (tree_right_count - tree_right_true_count)
-        split = np.argmin(mse)
-        j = split / X.shape[1]
-        s = X[j, split % X.shape[1]]
-        
-        for j in range(X.shape[1]):
-            np.tile(X[:,j], len(X)) <= X[:,j]
+        y_tile = np.tile(y, X.size).reshape((X.shape[1], X.shape[0], -1))
+        tree_left_count = np.sum(tree_left, axis=2)
+        tree_right_count = np.sum(tree_right, axis=2)
+        tree_left_y_sum = np.sum(tree_left * y_tile, axis=2)
+        tree_right_y_sum = np.sum(tree_right * y_tile, axis=2)
+        c_hat_left = np.where(tree_left_count > 0,
+                              tree_left_y_sum / tree_left_count, 0)
+        c_hat_right = np.where(tree_right_count > 0,
+                               tree_right_y_sum / tree_right_count, 0)
+        mse = (1 - c_hat_left) ** 2 * tree_left_y_sum \
+            + c_hat_left ** 2 * (tree_left_count - tree_left_y_sum) \
+            + (1 - c_hat_right) ** 2 * tree_right_y_sum \
+            + c_hat_right ** 2 * (tree_right_count - tree_right_y_sum)
+        split = np.unravel_index(np.argmin(mse), mse.shape)
+        j = split[0]
+        s = X[split[1], j]
+        if tree_left_count[split] == len(X):
+            return c_hat_left[split]
+        # else tree_left_count != len(X):
+        return {
+            "splitting_variable": j,
+            "splitting_threshold": s,
+            "left": self._fit_recur(X[tree_left[split], :], y[tree_left[split]], depth+1),
+            "right": self._fit_recur(X[tree_right[split], :], y[tree_right[split]], depth+1)
+        }
 
     def fit(self, X, y):
         '''
@@ -58,7 +68,7 @@ class MyDecisionTreeRegressor():
         You should update the self.root in this function.
         '''
         # depth-first fit
-        self._fit_recur(X, y, self.root, 1)
+        self.root = self._fit_recur(X, y, 1)
 
     def predict(self, X):
         '''
@@ -130,6 +140,8 @@ if __name__ == '__main__':
             tree.fit(x_train, y_train)
 
             model_dict = tree.get_model_dict()
+            # TODO Debugging
+            # print(model_dict)
             y_pred = tree.predict(x_train)
 
             with open("Test_data" + os.sep + "decision_tree_" + str(i) + "_" + str(j) + ".json", 'r') as fp:
