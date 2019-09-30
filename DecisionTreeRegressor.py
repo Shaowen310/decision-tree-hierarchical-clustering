@@ -23,14 +23,13 @@ class MyDecisionTreeRegressor():
         self.root = None
 
     def _fit_recur(self, X, y, depth):
-        # to find argmin (j,s), try all (j,s) and store result in array of shape (j,s)
-
         if depth >= self.max_depth or len(X) < self.min_samples_split:
             return np.sum(y) / len(X)
 
-        compare_lhs = np.tile(X.T, len(X)).reshape(
+        X_T = X.T
+        compare_lhs = np.tile(X_T, len(X)).reshape(
             (X.shape[1], X.shape[0], -1))
-        compare_rhs = np.reshape(X.T, (X.shape[1], X.shape[0], 1))
+        compare_rhs = np.reshape(X_T, (X.shape[1], X.shape[0], 1))
         tree_left = compare_lhs <= compare_rhs
         tree_right = compare_lhs > compare_rhs
         y_tile = np.tile(y, X.size).reshape((X.shape[1], X.shape[0], -1))
@@ -46,9 +45,14 @@ class MyDecisionTreeRegressor():
             + c_hat_left ** 2 * (tree_left_count - tree_left_y_sum) \
             + (1 - c_hat_right) ** 2 * tree_right_y_sum \
             + c_hat_right ** 2 * (tree_right_count - tree_right_y_sum)
-        split = np.unravel_index(np.argmin(mse), mse.shape)
+
+        s_cand = np.where(np.abs(mse - np.min(mse)) < 1e-5, X_T, np.nan)
+        split_0 = np.nonzero(~np.all(np.isnan(s_cand), axis=1))[0][0]
+        split = (split_0, np.nanargmin(s_cand[split_0, :]))
+
         j = split[0]
-        s = X[split[1], j]
+        s = X_T[split]
+
         if tree_left_count[split] == len(X):
             return c_hat_left[split]
         # else tree_left_count != len(X):
