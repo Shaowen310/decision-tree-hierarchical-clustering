@@ -62,6 +62,14 @@ def euclidean_distance(p, q):
     return np.sqrt(np.sum((p - q)**2))
 
 
+def cdist(XA, XB, metric):
+    dist = np.empty((len(XA), len(XB)))
+    for i in range(len(XA)):
+        for j in range(len(XB)):
+            dist[i, j] = metric(XA[i], XB[j])
+    return dist
+
+
 def single_linkage(points, clusters, p, q):
     '''
     TO DO
@@ -78,7 +86,10 @@ def single_linkage(points, clusters, p, q):
     -------
     Returns: a float, the proximity of single linkage between clusters[p] and clusters[q]
     '''
-    pass
+    XA = points[clusters[p].items]
+    XB = points[clusters[q].items]
+    proximity = cdist(XA, XB, euclidean_distance)
+    return np.min(proximity)
 
 
 def complete_linkage(points, clusters, p, q):
@@ -97,7 +108,10 @@ def complete_linkage(points, clusters, p, q):
     -------
     Returns: a float, the proximity of complete linkage between clusters[p] and clusters[q]
     '''
-    pass
+    XA = points[clusters[p].items]
+    XB = points[clusters[q].items]
+    proximity = cdist(XA, XB, euclidean_distance)
+    return np.max(proximity)
 
 
 class MyAgglomerativeClustering():
@@ -162,9 +176,17 @@ class MyAgglomerativeClustering():
             new_cluster.append(i)
             list.append(new_cluster)
 
-        self._proximity_matrix = np.zeros(
-            (2 * self._n_items, 2 * self._n_items), dtype=DATATYPE)
+        '''Changed to use NaN'''
+        self._proximity_matrix = np.full(
+            (2 * self._n_items, 2 * self._n_items), np.nan, dtype=DATATYPE)
         return inputs, list
+
+    def _remaining_clusters(self):
+        remaining_clusters = []
+        for i, cluster in enumerate(self._clusters):
+            if cluster.used:
+                remaining_clusters.append(i)
+        return remaining_clusters
 
     def find_clusters_to_merge(self):
         '''
@@ -179,7 +201,12 @@ class MyAgglomerativeClustering():
         p, q: int, int
                 the id of two clusters that should be merged
         '''
-        pass
+        remaining_clusters = self._remaining_clusters()
+        sub_p_matrix = self._proximity_matrix[np.ix_(remaining_clusters,
+                                                     remaining_clusters)]
+        idx_p, idx_q = np.unravel_index(
+            np.nanargmin(sub_p_matrix), sub_p_matrix.shape)
+        return remaining_clusters[idx_p], remaining_clusters[idx_q]
 
     def merge_cluster(self, p, q):
         '''
@@ -195,7 +222,13 @@ class MyAgglomerativeClustering():
         Returns: int
                 the id of the new cluster by merging p and q.
         '''
-        pass
+        new_cluster = MyCluster()
+        new_cluster.extend(self._clusters[p].items)
+        new_cluster.extend(self._clusters[q].items)
+        self._clusters.append(new_cluster)
+        self._clusters[p].release()
+        self._clusters[q].release()
+        return len(self._clusters)-1
 
     def update_proximity(self, new_cluster):
         '''
@@ -210,7 +243,11 @@ class MyAgglomerativeClustering():
         Returns:
                 None
         '''
-        pass
+        remaining_clusters = self._remaining_clusters()
+        remaining_clusters.pop()
+        for i in remaining_clusters:
+            self._proximity_matrix[i, new_cluster] = self._linkage_func(
+                self._items, self._clusters, i, new_cluster)
 
     def fit(self, X):
         '''
