@@ -47,7 +47,10 @@ class MyGradientBoostingRegressor():
         :param X: Feature data, type: numpy array, shape: (N, num_feature)
         :return: y_pred: Predicted label, type: numpy array, shape: (N,)
         '''
-        pass
+        y = np.zeros(len(X))
+        for estimator in estimators:
+            y += estimator.predict(X)
+        return y
 
     def get_model_dict(self):
         model_dict = dict()
@@ -77,12 +80,24 @@ if __name__ == '__main__':
             gbr = MyGradientBoostingRegressor(
                 n_estimators=n_estimators, max_depth=5, min_samples_split=2)
             gbr.fit(x_train, y_train)
-            model_dict = gbr.get_model_dict()
+            # model_dict = gbr.get_model_dict()
 
-            y_pred = gbr.predict(x_train)
+            # y_pred = gbr.predict(x_train)
 
             with open("Test_data" + os.sep + "gradient_boosting_" + str(i) + "_" + str(j) + ".json", 'r') as fp:
                 test_model_dict = json.load(fp)
+
+            # TODO Debugging
+            estimators = np.empty((len(test_model_dict),), dtype=np.object)
+            for i_model in range(len(test_model_dict)):
+                estimator = MyDecisionTreeRegressor(
+                    gbr.max_depth, gbr.min_samples_split)
+                estimator.root = test_model_dict[str(i_model)]
+                estimators[i_model] = estimator
+            gbr.estimators = estimators
+            model_dict = gbr.get_model_dict()
+            y_pred = gbr.predict(x_train)
+            print(y_pred)
 
             y_test_pred = np.genfromtxt(
                 "Test_data" + os.sep + "y_pred_gradient_boosting_" + str(i) + "_" + str(j) + ".csv", delimiter=",")
