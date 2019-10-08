@@ -31,6 +31,7 @@ class MyGradientBoostingRegressor():
         self.estimators = np.empty((self.n_estimators,), dtype=np.object)
         self.max_depth = max_depth
         self.min_samples_split = min_samples_split
+        self.c = None
 
     def fit(self, X, y):
         '''
@@ -47,10 +48,10 @@ class MyGradientBoostingRegressor():
         :param X: Feature data, type: numpy array, shape: (N, num_feature)
         :return: y_pred: Predicted label, type: numpy array, shape: (N,)
         '''
-        y = np.zeros(len(X))
+        y = np.empty(len(X))
         for estimator in estimators:
             y += estimator.predict(X)
-        return y
+        return y*self.learning_rate + self.c
 
     def get_model_dict(self):
         model_dict = dict()
@@ -96,8 +97,8 @@ if __name__ == '__main__':
                 estimators[i_model] = estimator
             gbr.estimators = estimators
             model_dict = gbr.get_model_dict()
+            gbr.c = np.sum(y_train)/len(y_train)
             y_pred = gbr.predict(x_train)
-            print(y_pred)
 
             y_test_pred = np.genfromtxt(
                 "Test_data" + os.sep + "y_pred_gradient_boosting_" + str(i) + "_" + str(j) + ".csv", delimiter=",")
