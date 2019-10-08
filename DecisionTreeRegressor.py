@@ -79,15 +79,15 @@ class MyDecisionTreeRegressor():
         :param X: Feature data, type: numpy array, shape: (N, num_feature)
         :return: y_pred: Predicted label, type: numpy array, shape: (N,)
         '''
-        y_pred = []
-        for x in X:
+        y_pred = np.empty(len(X))
+        for i_x, x in enumerate(X):
             model_node_iter = self.root
             while type(model_node_iter) is dict:
                 if x[model_node_iter['splitting_variable']] <= model_node_iter['splitting_threshold']:
                     model_node_iter = model_node_iter['left']
                 else:
                     model_node_iter = model_node_iter['right']
-            y_pred.append(model_node_iter)
+            y_pred[i_x] = model_node_iter
         return y_pred
 
     def get_model_dict(self):
@@ -144,17 +144,11 @@ if __name__ == '__main__':
             tree.fit(x_train, y_train)
 
             model_dict = tree.get_model_dict()
-            # TODO Debugging
-            # print(model_dict)
+
             y_pred = tree.predict(x_train)
 
             with open("Test_data" + os.sep + "decision_tree_" + str(i) + "_" + str(j) + ".json", 'r') as fp:
                 test_model_dict = json.load(fp)
-
-            # TODO Debugging
-            # tree.root = test_model_dict
-            # model_dict = tree.get_model_dict()
-            # y_pred = tree.predict(x_train)
 
             y_test_pred = np.genfromtxt(
                 "Test_data" + os.sep + "y_pred_decision_tree_" + str(i) + "_" + str(j) + ".csv", delimiter=",")

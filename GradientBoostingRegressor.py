@@ -41,15 +41,26 @@ class MyGradientBoostingRegressor():
 
         You should update the self.estimators in this function
         '''
-        pass
+        self.c = np.sum(y_train)/len(y_train)
+
+        f_m = np.full(len(X), self.c)
+        gama_m = y-f_m
+        for m in range(self.n_estimators):
+            estimator = MyDecisionTreeRegressor(
+                self.max_depth, self.min_samples_split)
+            estimator.fit(X, gama_m)
+            self.estimators[m] = estimator
+
+            f_m += estimator.predict(X)*self.learning_rate
+            gama_m = y-f_m
 
     def predict(self, X):
         '''
         :param X: Feature data, type: numpy array, shape: (N, num_feature)
         :return: y_pred: Predicted label, type: numpy array, shape: (N,)
         '''
-        y = np.empty(len(X))
-        for estimator in estimators:
+        y = np.zeros(len(X))
+        for estimator in self.estimators:
             y += estimator.predict(X)
         return y*self.learning_rate + self.c
 
@@ -81,24 +92,12 @@ if __name__ == '__main__':
             gbr = MyGradientBoostingRegressor(
                 n_estimators=n_estimators, max_depth=5, min_samples_split=2)
             gbr.fit(x_train, y_train)
-            # model_dict = gbr.get_model_dict()
+            model_dict = gbr.get_model_dict()
 
-            # y_pred = gbr.predict(x_train)
+            y_pred = gbr.predict(x_train)
 
             with open("Test_data" + os.sep + "gradient_boosting_" + str(i) + "_" + str(j) + ".json", 'r') as fp:
                 test_model_dict = json.load(fp)
-
-            # TODO Debugging
-            estimators = np.empty((len(test_model_dict),), dtype=np.object)
-            for i_model in range(len(test_model_dict)):
-                estimator = MyDecisionTreeRegressor(
-                    gbr.max_depth, gbr.min_samples_split)
-                estimator.root = test_model_dict[str(i_model)]
-                estimators[i_model] = estimator
-            gbr.estimators = estimators
-            model_dict = gbr.get_model_dict()
-            gbr.c = np.sum(y_train)/len(y_train)
-            y_pred = gbr.predict(x_train)
 
             y_test_pred = np.genfromtxt(
                 "Test_data" + os.sep + "y_pred_gradient_boosting_" + str(i) + "_" + str(j) + ".csv", delimiter=",")
