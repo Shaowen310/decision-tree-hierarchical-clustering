@@ -176,9 +176,8 @@ class MyAgglomerativeClustering():
             new_cluster.append(i)
             list.append(new_cluster)
 
-        '''Changed to use NaN'''
-        self._proximity_matrix = np.full(
-            (2 * self._n_items, 2 * self._n_items), np.nan, dtype=DATATYPE)
+        self._proximity_matrix = np.zeros(
+            (2 * self._n_items, 2 * self._n_items), dtype=DATATYPE)
         return inputs, list
 
     def _remaining_clusters(self):
@@ -204,6 +203,7 @@ class MyAgglomerativeClustering():
         remaining_clusters = self._remaining_clusters()
         sub_p_matrix = self._proximity_matrix[np.ix_(remaining_clusters,
                                                      remaining_clusters)]
+        sub_p_matrix[sub_p_matrix == 0] = np.nan
         idx_p, idx_q = np.unravel_index(
             np.nanargmin(sub_p_matrix), sub_p_matrix.shape)
         return remaining_clusters[idx_p], remaining_clusters[idx_q]
