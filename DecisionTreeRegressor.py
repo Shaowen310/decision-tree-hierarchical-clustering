@@ -29,22 +29,25 @@ class MyDecisionTreeRegressor():
         X_T = X.T
         compare_lhs = np.tile(X_T, len(X)).reshape(
             (X.shape[1], X.shape[0], -1))
-        compare_rhs = np.reshape(X_T, (X.shape[1], X.shape[0], 1))
+        compare_rhs = np.expand_dims(X_T, axis=2)
         tree_left = compare_lhs <= compare_rhs
         tree_right = compare_lhs > compare_rhs
         y_tile = np.tile(y, X.size).reshape((X.shape[1], X.shape[0], -1))
         tree_left_count = np.sum(tree_left, axis=2)
         tree_right_count = np.sum(tree_right, axis=2)
-        tree_left_y_sum = np.sum(tree_left * y_tile, axis=2)
-        tree_right_y_sum = np.sum(tree_right * y_tile, axis=2)
+        tree_left_y = tree_left * y_tile
+        tree_left_y_sum = np.sum(tree_left_y, axis=2)
+        tree_right_y = tree_right * y_tile
+        tree_right_y_sum = np.sum(tree_right_y, axis=2)
         c_hat_left = np.where(tree_left_count > 0,
                               tree_left_y_sum / tree_left_count, 0)
         c_hat_right = np.where(tree_right_count > 0,
                                tree_right_y_sum / tree_right_count, 0)
-        mse = (1 - c_hat_left) ** 2 * tree_left_y_sum \
-            + c_hat_left ** 2 * (tree_left_count - tree_left_y_sum) \
-            + (1 - c_hat_right) ** 2 * tree_right_y_sum \
-            + c_hat_right ** 2 * (tree_right_count - tree_right_y_sum)
+
+        mse = c_hat_left ** 2 * tree_left_count - \
+            np.sum(tree_left_y * np.expand_dims(c_hat_left, axis=2), axis=2) * 2 + \
+            c_hat_right ** 2 * tree_right_count - \
+            np.sum(tree_right_y * np.expand_dims(c_hat_right, axis=2), axis=2) * 2
 
         s_cand = np.where(np.abs(mse - np.min(mse)) < 1e-5, X_T, np.nan)
         split_0 = np.nonzero(~np.all(np.isnan(s_cand), axis=1))[0][0]
