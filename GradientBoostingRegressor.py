@@ -41,7 +41,7 @@ class MyGradientBoostingRegressor():
 
         You should update the self.estimators in this function
         '''
-        self.c = np.sum(y_train)/len(y_train)
+        self.c = np.sum(y)/len(y)
 
         f_m = np.full(len(X), self.c)
         gama_m = y-f_m
