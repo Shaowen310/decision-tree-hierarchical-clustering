@@ -51,11 +51,8 @@ class MyDecisionTreeRegressor():
         j = split[0]
         s = X_T[split]
 
-        c_hat_left = np.nanmean(
-            np.where(tree_left, compare_lhs, np.nan), axis=2)
-
         if tree_left_count[split] == len(X):
-            return c_hat_left[split]
+            return np.sum(y) / len(X)
         # else tree_left_count != len(X):
         return {
             "splitting_variable": j,
