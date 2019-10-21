@@ -70,7 +70,7 @@ class MyDecisionTreeRegressor():
         You should update the self.root in this function.
         '''
         # depth-first fit
-        self.root = self._fit_recur(X, y, 1)
+        self.root = self._fit_recur(X, y, 0)
 
     def predict(self, X):
         '''
