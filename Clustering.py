@@ -8,7 +8,6 @@ class MyCluster():
     '''
     The cluster object used in clustering.
     Just use the properties and methods.
-    You can also change anything if you need.
     -------
     Properties:
     items: list
@@ -72,7 +71,6 @@ def cdist(XA, XB, metric):
 
 def single_linkage(points, clusters, p, q):
     '''
-    TO DO
     Compute the proximity of single linkage between two clusters.
     Just use euclidean_distance(points[x], points[y]) to calculate the distance between x and y
     -------
@@ -94,7 +92,6 @@ def single_linkage(points, clusters, p, q):
 
 def complete_linkage(points, clusters, p, q):
     '''
-    TO DO
     Compute the proximity of complete linkage between two clusters.
     Just use euclidean_distance(points[x], points[y]) to calculate the distance between x and y
     -------
@@ -119,7 +116,6 @@ class MyAgglomerativeClustering():
     Agglomerative Clustering
     Recursively merges the pair of clusters that minimally increases the proximity of a given linkage.
     Use the attributes to implement the methods.
-    You can change anything if you need.
     -------
     Attributes:
     _n_clusters: int
@@ -130,14 +126,12 @@ class MyAgglomerativeClustering():
             the list of items
     _clusters: list
             the list of MyCluster
-            HINT: You don't need to remove a cluster even it is already merged into another one. Instead, just use its release() method.
     _proximity_matrix: array[2 * _n_items, 2 * _n_items]
             the proximity between each pair of cluster.
             e.g. the proximity between _clusters[i] and _clusters[j] is _proximity_matrix[i, j]
     _linkage: string
             to tell the algorithm which kind of linkage is used to define the proximity
     _linkage_func: callable
-            You should call _linkage_func in your implementation to compute the proximity instead of calling single_linkage or complete_linkage.
             It will be automatically navigated to the corresponding function based on _linkage.
             Note the parameters of _linkage_func should be the same as single_linkage and complete_linkage.
             E.g. call self._linkage_func(points, clusters, p, q) in this class.
@@ -151,7 +145,6 @@ class MyAgglomerativeClustering():
     def __init__(self, n_clusters=1, linkage='single'):
         '''
         Construction
-        You don't need to change this method.
         '''
         self._n_clusters = n_clusters
         self._n_items = None
@@ -167,7 +160,6 @@ class MyAgglomerativeClustering():
     def init_cluster(self, inputs):
         '''
         Initialization
-        You don't need to change this method.
         '''
         list = []
         self._n_items = len(inputs)
@@ -189,9 +181,7 @@ class MyAgglomerativeClustering():
 
     def find_clusters_to_merge(self):
         '''
-        TO DO
         Select two clusters with the smallest proximity.
-        HINT: You may need to check 'self._proximity_matrix' to find the smallest proximity.
         -------
         Inputs:
         None
@@ -210,7 +200,6 @@ class MyAgglomerativeClustering():
 
     def merge_cluster(self, p, q):
         '''
-        TO DO
         Merge the pair of clusters (p, q).
         -------
         Inputs:
@@ -232,7 +221,6 @@ class MyAgglomerativeClustering():
 
     def update_proximity(self, new_cluster):
         '''
-        TO DO
         Update the proximity matrix using the new cluster.
         Call self._linkage_func(points, clusters, p, q) to compute the proximity as mentioned above.
         -------
@@ -252,7 +240,6 @@ class MyAgglomerativeClustering():
     def fit(self, X):
         '''
         Workflow of clustering.
-        You don't need to change this method as it is already done.
         Just implement find_clusters_to_merge(), merge_cluster(), update_proximity(), which are used in this method.
         -------
         Returns: self._history that will be compared with the correct solution.
