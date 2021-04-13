@@ -9,3 +9,7 @@ The implementation of the three algorithms are in `DecisionTreeRegressor.py`, `G
 ## Dependencies
 
 * numpy
+
+## Note
+
+This is the solution for the assignment of the master-level data mining course in NUS.
